@@ -2,17 +2,20 @@ from flask import Flask, render_template, request
 from wtforms import Form, TextAreaField, validators
 import pickle
 import sqlite3
-import os
+import os, boto3
 import numpy as np
 
 from vectorizer import vect
 
 app = Flask(__name__)
-
+session = boto3.Session(
+    aws_access_key_id="AKIAWPOKT47YXVAGX4YH",
+    aws_secret_access_key="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"
+)
+s3 = session.resource("s3")
+clf = pickle.loads(s3.Bucket("loi-public").Object("classifier.pkl").get()['Body'].read())
 cur_dir = os.path.dirname(__file__)
-clf = pickle.load(open(os.path.join(cur_dir,
-                 'pkl_objects',
-                 'classifier.pkl'), 'rb'))
+#clf = pickle.load(open('https://loi-public.s3.ap-southeast-1.amazonaws.com/classifier.pkl'), 'rb')
 db = os.path.join(cur_dir, 'reviews.sqlite')
 
 def classify(document):
@@ -72,4 +75,4 @@ def feedback():
 
 if __name__ == '__main__':
     # app.run(debug=True)
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
